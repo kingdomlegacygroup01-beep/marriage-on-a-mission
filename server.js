@@ -13,38 +13,42 @@ app.use(express.static(path.join(__dirname, 'public')));
 const NOTIFY_EMAIL    = 'info.nwfle@gmail.com';
 const RESERVATION_URL = 'https://be.synxis.com/?adult=1&arrive=2026-10-09&chain=6255&child=0&currency=USD&depart=2026-10-11&group=091126NWFL&hotel=37398&level=hotel&locale=en-US&productcurrency=USD&rooms=1';
 
+// Send via Gmail API directly — no nodemailer needed
 function sendEmail({ to, subject, html }) {
   return new Promise((resolve, reject) => {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) return reject(new Error('RESEND_API_KEY not set'));
+    const user = process.env.GMAIL_USER;
+    const pass = process.env.GMAIL_APP_PASSWORD;
+    if (!user || !pass) return reject(new Error('Gmail credentials not set'));
 
-    const body = JSON.stringify({
-      from: 'Marriage on a Mission <onboarding@resend.dev>',
-      to:   Array.isArray(to) ? to : [to],
+    // Strip all spaces/whitespace from app password just in case
+    const cleanPass = pass.replace(/\s+/g, '');
+
+    const body = JSON.stringify({ to, subject, html, user, pass: cleanPass });
+
+    // Use nodemailer via inline require with explicit SMTP settings
+    const nodemailer = require('nodemailer');
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: user.trim(),
+        pass: cleanPass,
+      },
+      tls: {
+        rejectUnauthorized: false
+      }
+    });
+
+    transporter.sendMail({
+      from: `"Marriage on a Mission" <${user.trim()}>`,
+      to: Array.isArray(to) ? to.join(',') : to,
       subject,
       html,
+    }, (err, info) => {
+      if (err) return reject(err);
+      resolve(info);
     });
-
-    const req = https.request({
-      hostname: 'api.resend.com',
-      path:     '/emails',
-      method:   'POST',
-      headers: {
-        'Authorization':  `Bearer ${apiKey}`,
-        'Content-Type':   'application/json',
-        'Content-Length': Buffer.byteLength(body),
-      },
-    }, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        if (res.statusCode >= 200 && res.statusCode < 300) resolve(JSON.parse(data));
-        else reject(new Error(`Resend ${res.statusCode}: ${data}`));
-      });
-    });
-    req.on('error', reject);
-    req.write(body);
-    req.end();
   });
 }
 
@@ -61,7 +65,7 @@ app.post('/api/register', async (req, res) => {
         <div style="text-align:center;margin-bottom:24px">
           <p style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#9acd32;margin-bottom:8px">New Registration</p>
           <h1 style="color:#9acd32;font-size:22px;margin:0">Marriage on a Mission</h1>
-          <p style="color:#999;font-size:13px;margin-top:6px">October 9-10, 2025</p>
+          <p style="color:#cccccc;font-size:13px;margin-top:6px">October 9-10, 2025</p>
         </div>
         <table style="width:100%;border-collapse:collapse">
           <tr style="border-bottom:1px solid #252525"><td style="padding:10px 12px;font-size:11px;text-transform:uppercase;color:#9acd32;width:130px">Couple</td><td style="padding:10px 12px;color:#fff;font-weight:bold">${fname} ${lname} &amp; ${sfname||'—'} ${slname||''}</td></tr>
@@ -93,17 +97,17 @@ app.post('/api/register', async (req, res) => {
           <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#d4a820;margin-bottom:10px">Reserve Your Room</p>
           <p style="color:#e4e4e4;font-size:14px;line-height:1.6;margin-bottom:14px">Room block deadline is <strong style="color:#f0c830">September 19</strong>.</p>
           <a href="${RESERVATION_URL}" style="display:inline-block;background:#d4a820;color:#000;font-weight:bold;font-size:13px;text-decoration:none;padding:12px 24px;border-radius:4px">Reserve Your Room</a>
-          <p style="color:#aaa;font-size:12px;margin-top:10px">Block Code: MISSION2025</p>
+          <p style="color:#cccccc;font-size:12px;margin-top:10px">Block Code: MISSION2025</p>
         </div>`:''}
-        <p style="color:#ccc;font-size:13px">Questions? <a href="mailto:info.nwfle@gmail.com" style="color:#9acd32">info.nwfle@gmail.com</a></p>
-        <p style="text-align:center;color:#aaa;font-size:12px;margin-top:24px;font-style:italic">"Strengthening Unity. Restoring Connection. Building Legacy."</p>
+        <p style="color:#cccccc;font-size:13px">Questions? <a href="mailto:info.nwfle@gmail.com" style="color:#9acd32">info.nwfle@gmail.com</a></p>
+        <p style="text-align:center;color:#aaaaaa;font-size:12px;margin-top:24px;font-style:italic">"Strengthening Unity. Restoring Connection. Building Legacy."</p>
       </div>`,
     });
 
     res.json({ success: true });
   } catch (err) {
     console.error('Email error:', err.message);
-    res.status(500).json({ success: false, error: 'Email could not be sent. Please contact info.nwfle@gmail.com' });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
