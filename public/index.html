@@ -1,327 +1,431 @@
-import { useState } from "react";
-
-const LIME = "#9acd32";
-const GOLD = "#d4a820";
-const BLACK = "#050505";
-const DARK = "#0e0e0e";
-const PANEL = "#131313";
-const BORDER = "#252525";
-const BORDER2 = "#333";
-
-const questions = [
-  { id:"q1", section:"Communication", text:"How would you describe the current state of communication in your marriage?", type:"single", options:["We communicate well and feel heard","We talk, but often feel misunderstood","We avoid difficult conversations","Communication leads to arguments","We rarely communicate meaningfully"] },
-  { id:"q2", section:"Communication", text:"Where does communication break down most in your marriage?", type:"multi", options:["During conflict or disagreements","When sharing emotional needs","Around finances or money","Around parenting decisions","Discussing intimacy or connection","When one partner shuts down"] },
-  { id:"q3", section:"Conflict & Healing", text:"How does your household typically handle unresolved conflict?", type:"single", options:["We resolve it together before it festers","We take space, then revisit it","One person apologizes to keep the peace","It stays unspoken and builds over time","Arguments repeat without resolution"] },
-  { id:"q4", section:"Conflict & Healing", text:"Are there past hurts or wounds in your marriage that still affect you today?", type:"single", options:["Yes — significantly","Yes — somewhat","A little, but we've mostly moved forward","No, we've worked through most things"] },
-  { id:"q5", section:"Intimacy & Connection", text:"How connected do you feel to your spouse emotionally right now?", type:"scale", labels:["Very disconnected","Somewhat connected","Deeply connected"] },
-  { id:"q6", section:"Intimacy & Connection", text:"Which areas of intimacy feel most strained in your marriage?", type:"multi", options:["Emotional closeness","Physical intimacy","Spiritual connection","Quality time together","Feeling desired and valued","Trust and vulnerability"] },
-  { id:"q7", section:"Finances", text:"How much does money cause tension in your marriage?", type:"single", options:["It's a major source of stress","It causes occasional arguments","We disagree but manage it","It rarely causes conflict","We're fully aligned financially"] },
-  { id:"q8", section:"Finances", text:"Do you and your spouse have a shared financial vision or plan?", type:"single", options:["Yes, we're on the same page","We've talked about it but aren't aligned","We haven't really discussed it","We disagree strongly on financial priorities"] },
-  { id:"q9", section:"Purpose & Faith", text:"Do you feel your marriage has a clear shared purpose or calling?", type:"single", options:["Yes — we know our mission together","We're beginning to discover it","We haven't thought about it much","We feel disconnected from shared purpose"] },
-  { id:"q10", section:"Purpose & Faith", text:"How would you describe your shared spiritual life as a couple?", type:"single", options:["We pray and grow together regularly","We believe the same things but rarely practice together","Our faith levels are different and it creates tension","Faith isn't a significant part of our marriage","We want to grow spiritually together but don't know how"] },
-  {
-    id:"q11", section:"What You Need",
-    text:"What do you most hope to gain from a marriage conference? (Select all that apply)",
-    type:"multi_open",
-    options:[
-      "Tools for better communication",
-      "Healing from past hurts",
-      "Renewed emotional connection",
-      "Restored physical intimacy",
-      "Financial alignment",
-      "Clarity on our shared purpose",
-      "A fresh start and renewed commitment",
-      "Practical daily habits for our marriage",
-      "Spiritual growth as a couple",
-      "Conflict resolution skills",
-      "Learning to lead and serve each other better",
-      "Tools for parenting as a united front"
-    ],
-    followUps:{
-      "Tools for better communication":"What specific communication challenge would you most want help with?",
-      "Healing from past hurts":"Is there a particular area of hurt or unresolved pain you'd like the conference to address?",
-      "Restored physical intimacy":"What do you feel is the biggest barrier to physical connection in your marriage right now?",
-      "Clarity on our shared purpose":"Do you have a sense of what your marriage is called to do or build together — or is that still unclear?",
-      "Conflict resolution skills":"What does conflict typically look like in your home, and what would a healthier version look like?",
-      "Tools for parenting as a united front":"What's the hardest part about parenting together as a team?"
-    }
-  },
-  { id:"q12", section:"What You Need", text:"How long have you been married?", type:"single", options:["Less than 2 years","2–5 years","6–10 years","11–20 years","21+ years","We're engaged / pre-married"] },
-  { id:"q13", section:"What You Need", text:"In one sentence, what is the #1 thing your marriage needs most right now?", type:"text", placeholder:"Share openly — this is completely anonymous..." }
-];
-
-const sectionColors = { "Communication":LIME, "Conflict & Healing":"#ff6b6b", "Intimacy & Connection":GOLD, "Finances":"#74c0fc", "Purpose & Faith":"#b197fc", "What You Need":LIME };
-
-function isAnswered(q, answers) {
-  const a = answers[q.id];
-  if (q.type === "multi" || q.type === "multi_open") return a && a.length > 0;
-  if (q.type === "scale") return a !== undefined;
-  if (q.type === "text") return true;
-  return !!a;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marriage on a Mission — Register · October 9–10, 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700;900&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --black:#050505;--dark:#0d0d0d;--panel:#131313;--panel2:#1a1a1a;--border:#252525;--border2:#333;
+  --lime:#9acd32;--lime-bright:#b8e04a;--lime-dim:#4d6e15;--lime-glow:rgba(154,205,50,.15);
+  --red:#cc1f23;--red-bright:#ff4448;--gold:#d4a820;--gold-bright:#f0c830;--gold-dim:#8a6a0a;
+  --white:#ffffff;--off-white:#e4e4e4;--gray:#999;--gray-dim:#484848;
+  --FD:'Cinzel Decorative',serif;--FH:'Cinzel',serif;--FB:'Lato',sans-serif;
 }
-
-function buildEmailBody(answers) {
-  let body = "Your Marriage on a Mission Poll Responses\nOctober 9-10, 2026\n=========================================\n\n";
-  questions.forEach((q, i) => {
-    body += `Q${i+1}. ${q.text}\n`;
-    const a = answers[q.id];
-    if (!a || (Array.isArray(a) && a.length === 0)) body += "Not answered\n";
-    else if (Array.isArray(a)) {
-      a.forEach(opt => {
-        body += `  • ${opt}\n`;
-        const fuKey = `${q.id}_fu_${opt}`;
-        if (answers[fuKey]) body += `    → ${answers[fuKey]}\n`;
-      });
-    } else body += a + "\n";
-    body += "\n";
-  });
-  body += "=========================================\nThank you for sharing. See you October 9-10, 2026!\n— Marriage on a Mission Ministry\ninfo.nwfle@gmail.com\n";
-  return body;
-}
-
-export default function App() {
-  const [current, setCurrent] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [storageError, setStorageError] = useState("");
-
-  const isReview = current === questions.length;
-  const q = !isReview ? questions[current] : null;
-  const progress = Math.round((current / questions.length) * 100);
-  const accentColor = q ? sectionColors[q.section] : LIME;
-
-  function setAnswer(qid, val) { setAnswers(prev => ({ ...prev, [qid]: val })); }
-
-  function toggleMulti(qid, val) {
-    setAnswers(prev => {
-      const cur = prev[qid] || [];
-      if (cur.includes(val)) return { ...prev, [qid]: cur.filter(v => v !== val) };
-      return { ...prev, [qid]: [...cur, val] };
-    });
-  }
-
-  function advance() { setCurrent(c => c + 1); }
-  function goBack() { setCurrent(c => Math.max(0, c - 1)); }
-
-  async function handleSubmit() {
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setEmailError("Please enter a valid email address so we can send your responses.");
-      return;
-    }
-    setEmailError("");
-    setSubmitting(true);
-    try {
-      const res = await fetch("https://marriageonamission-production.up.railway.app/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, answers })
-      });
-      if (!res.ok) throw new Error("Server error");
-      setSubmitted(true);
-    } catch {
-      setStorageError("Something went wrong submitting your response. Please try again.");
-    }
-    setSubmitting(false);
-  }
-
-  // ── THANK YOU ──
-  if (submitted) return (
-    <div style={{background:BLACK,fontFamily:"'Lato',sans-serif",padding:"3rem 1.5rem",textAlign:"center"}}>
-      <div style={{width:72,height:72,borderRadius:"50%",border:`2px solid ${LIME}`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 1.25rem",fontSize:28,color:LIME}}>✦</div>
-      <h2 style={{fontFamily:"Georgia,serif",color:LIME,fontSize:"1.7rem",marginBottom:".35rem"}}>Thank You</h2>
-      <p style={{color:GOLD,fontStyle:"italic",marginBottom:"1rem"}}>Your voice matters to us.</p>
-      <p style={{color:"#ffffff",maxWidth:440,margin:"0 auto 1.5rem",lineHeight:1.7,fontSize:".93rem"}}>Your anonymous response has been recorded. Check your inbox — a copy of your answers has been sent to <strong style={{color:LIME}}>{email}</strong>.</p>
-      <div style={{background:PANEL,border:`1px solid ${BORDER2}`,borderRadius:6,padding:"1rem 2rem",display:"inline-block"}}>
-        <div style={{color:LIME,fontFamily:"Georgia,serif",fontSize:"1rem",fontWeight:700}}>Marriage on a Mission</div>
-        <div style={{color:GOLD,fontSize:".88rem",marginTop:3}}>October 9–10, 2026</div>
+html{scroll-behavior:smooth}
+body{background:var(--black);color:var(--off-white);font-family:var(--FB);font-size:16px;line-height:1.65;overflow-x:hidden}
+nav{position:fixed;top:0;left:0;right:0;z-index:200;height:58px;background:rgba(5,5,5,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--lime-dim);display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--lime-dim);flex-shrink:0}
+.nav-text{display:flex;flex-direction:column;line-height:1.2}
+.nav-name{font-family:var(--FH);font-size:.72rem;font-weight:700;letter-spacing:.14em;color:var(--lime);text-transform:uppercase}
+.nav-tagline{font-family:var(--FH);font-size:.5rem;letter-spacing:.1em;color:var(--gray);text-transform:uppercase}
+.nav-links{display:flex;gap:2rem;list-style:none}
+.nav-links a{font-family:var(--FH);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gray);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--lime)}
+.nav-cta{background:var(--lime);color:var(--black);font-family:var(--FH);font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;padding:.5rem 1.2rem;border-radius:3px;transition:background .2s,transform .15s;white-space:nowrap}
+.nav-cta:hover{background:var(--lime-bright);transform:translateY(-1px)}
+.nav-toggle{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px}
+.nav-toggle span{display:block;width:24px;height:2px;background:var(--lime);border-radius:1px;transition:all .3s}
+.mobile-menu{display:none;position:fixed;top:58px;left:0;right:0;background:rgba(5,5,5,.99);border-bottom:1px solid var(--lime-dim);z-index:199}
+.mobile-menu.open{display:block}
+.mobile-menu a{display:block;padding:.85rem 2rem;font-family:var(--FH);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gray);text-decoration:none;border-bottom:1px solid var(--border);transition:color .2s,background .2s}
+.mobile-menu a:hover{color:var(--lime);background:var(--panel)}
+.mobile-menu a.mm-cta{color:var(--lime);font-weight:700;border-top:1px solid var(--lime-dim)}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8rem 2rem 5rem;position:relative;overflow:hidden}
+.hero-glow{position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);width:800px;height:800px;background:radial-gradient(ellipse,rgba(154,205,50,.06) 0%,transparent 65%);pointer-events:none}
+.hero-logo{width:190px;height:190px;border-radius:50%;border:2px solid var(--lime-dim);box-shadow:0 0 50px rgba(154,205,50,.22),0 0 100px rgba(154,205,50,.08);animation:pulse-glow 4s ease-in-out infinite;position:relative;z-index:1;margin-bottom:2.2rem}
+@keyframes pulse-glow{0%,100%{box-shadow:0 0 50px rgba(154,205,50,.22),0 0 100px rgba(154,205,50,.08)}50%{box-shadow:0 0 70px rgba(154,205,50,.4),0 0 140px rgba(154,205,50,.16)}}
+.hero-eyebrow{font-family:var(--FH);font-size:.68rem;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);margin-bottom:.8rem;animation:fadeUp .8s ease .15s both}
+.hero-title{font-family:var(--FD);font-size:clamp(2.2rem,7vw,4.8rem);font-weight:900;color:var(--lime);line-height:1.05;text-shadow:0 0 80px rgba(154,205,50,.25);margin-bottom:.6rem;animation:fadeUp .8s ease .3s both}
+.hero-sub{font-family:var(--FH);font-size:clamp(.9rem,2vw,1.15rem);color:var(--gold);letter-spacing:.07em;font-style:italic;margin-bottom:1.6rem;animation:fadeUp .8s ease .45s both}
+.hero-divider{width:120px;height:1px;background:linear-gradient(90deg,transparent,var(--lime),transparent);margin:0 auto 1.6rem;animation:fadeUp .8s ease .55s both}
+.hero-tagline{font-style:italic;font-size:1.05rem;color:var(--white);margin-bottom:2.5rem;letter-spacing:.02em;animation:fadeUp .8s ease .65s both}
+.hero-badges{display:flex;flex-wrap:wrap;justify-content:center;gap:1rem;margin-bottom:3rem;animation:fadeUp .8s ease .8s both}
+.h-badge{background:var(--panel);border:1px solid var(--border2);border-radius:4px;padding:.75rem 1.5rem;display:flex;flex-direction:column;align-items:center;gap:2px}
+.h-badge .b-label{font-family:var(--FH);font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gray)}
+.h-badge .b-value{font-family:var(--FH);font-size:.98rem;font-weight:700;color:var(--white);letter-spacing:.06em}
+.h-badge.accent{border-color:var(--lime-dim)}
+.h-badge.accent .b-value{color:var(--lime)}
+.hero-cta-row{display:flex;flex-wrap:wrap;justify-content:center;gap:1rem;animation:fadeUp .8s ease .95s both}
+.btn-primary{display:inline-block;background:var(--lime);color:var(--black);font-family:var(--FH);font-size:.78rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;padding:1rem 2.5rem;border-radius:3px;transition:background .2s,transform .15s,box-shadow .2s;box-shadow:0 4px 20px rgba(154,205,50,.25)}
+.btn-primary:hover{background:var(--lime-bright);transform:translateY(-2px);box-shadow:0 6px 28px rgba(154,205,50,.35)}
+.btn-secondary{display:inline-block;background:transparent;color:var(--gold);border:1px solid var(--gold-dim);font-family:var(--FH);font-size:.78rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;padding:1rem 2.5rem;border-radius:3px;transition:background .2s,color .2s,transform .15s}
+.btn-secondary:hover{background:rgba(212,168,32,.1);transform:translateY(-2px)}
+.scroll-hint{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;animation:fadeUp 1s ease 1.3s both}
+.scroll-hint span{font-size:.58rem;letter-spacing:.2em;color:var(--gray-dim);text-transform:uppercase;font-family:var(--FH)}
+.scroll-arrow{width:18px;height:18px;border-right:1.5px solid var(--lime-dim);border-bottom:1.5px solid var(--lime-dim);transform:rotate(45deg);animation:bounce 2s ease-in-out infinite}
+@keyframes bounce{0%,100%{transform:rotate(45deg) translate(0,0)}50%{transform:rotate(45deg) translate(3px,3px)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+.sw{position:relative;z-index:1;background:var(--dark);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.sw.alt{background:var(--panel)}
+section{max-width:1100px;margin:0 auto;padding:4.5rem 2rem}
+.s-label{font-family:var(--FH);font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem;display:flex;align-items:center;gap:.75rem}
+.s-label::before{content:'';display:block;width:26px;height:1px;background:var(--gold)}
+.s-title{font-family:var(--FH);font-size:clamp(1.4rem,3vw,2rem);font-weight:700;color:var(--lime);margin-bottom:.5rem;letter-spacing:.04em}
+.s-divider{width:100%;height:1px;background:linear-gradient(90deg,var(--lime-dim),transparent);margin-bottom:2rem}
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:none}
+.about-layout{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start}
+.about-text p{font-size:.97rem;color:var(--off-white);line-height:1.75;margin-bottom:1rem}
+.about-text p:last-child{margin-bottom:0}
+.about-text strong{color:var(--white);font-weight:700}
+.info-stack{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.info-row{background:var(--panel);padding:.9rem 1.2rem;display:flex;align-items:baseline;gap:.75rem}
+.info-row:nth-child(even){background:#111}
+.ir-label{font-family:var(--FH);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--lime);flex-shrink:0;width:80px}
+.ir-value{font-size:.95rem;color:var(--white)}
+.purpose-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-top:1.75rem}
+.p-item{display:flex;align-items:flex-start;gap:.65rem;background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:.75rem .9rem;font-size:.88rem;color:var(--off-white);line-height:1.5}
+.p-item::before{content:'✦';color:var(--lime);font-size:.6rem;margin-top:4px;flex-shrink:0}
+.sched-wrap{display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start}
+.day-header{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem}
+.day-pill{font-family:var(--FH);font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 12px;border-radius:20px;white-space:nowrap}
+.pill-fri{background:var(--lime);color:var(--black)}
+.pill-sat{background:var(--gold);color:var(--black)}
+.day-label{font-family:var(--FH);font-size:.95rem;font-weight:600;color:var(--white);letter-spacing:.03em}
+.sched-table{width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.sched-table thead tr{background:var(--panel2);border-bottom:2px solid var(--lime-dim)}
+.sched-table thead th{font-family:var(--FH);font-size:.56rem;letter-spacing:.15em;text-transform:uppercase;color:var(--white);padding:.6rem .9rem;text-align:left}
+.sched-table tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
+.sched-table tbody tr:last-child{border-bottom:none}
+.sched-table tbody tr:nth-child(odd){background:var(--panel)}
+.sched-table tbody tr:nth-child(even){background:#0f0f0f}
+.sched-table tbody tr:hover{background:#18260a}
+.sched-table td{padding:.7rem .9rem;vertical-align:middle}
+.td-t{font-family:var(--FH);font-size:.78rem;font-weight:700;color:var(--lime);white-space:nowrap;width:80px}
+.td-s{font-size:.9rem;font-weight:700;color:var(--white)}
+.td-f{font-family:var(--FH);font-size:.7rem;font-style:italic;color:var(--lime-bright);white-space:nowrap}
+.row-meal .td-s{color:var(--gold)}
+.row-break .td-s{color:var(--gray);font-weight:400;font-style:italic}
+.row-final .td-s{color:var(--lime-bright)}
+.row-special .td-s{color:var(--gold-bright)}
+.sessions-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.sess-item{background:var(--panel);padding:1.25rem 1.2rem}
+.sess-item:nth-child(even){background:#111}
+.sess-num{font-family:var(--FH);font-size:.56rem;letter-spacing:.16em;text-transform:uppercase;color:var(--lime);margin-bottom:4px}
+.sess-num.red{color:var(--red-bright)}
+.sess-num.gold{color:var(--gold)}
+.sess-name{font-family:var(--FH);font-size:.9rem;font-weight:700;color:var(--white);line-height:1.3;margin-bottom:.4rem}
+.sess-obj{font-size:.82rem;color:var(--gray);line-height:1.45;font-style:italic}
+.expect-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem}
+.expect-card{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:1.4rem 1.2rem;text-align:center;transition:border-color .25s,transform .2s}
+.expect-card:hover{border-color:var(--lime-dim);transform:translateY(-3px)}
+.ec-icon{font-size:2rem;margin-bottom:.75rem;display:block}
+.ec-title{font-family:var(--FH);font-size:.82rem;font-weight:700;color:var(--white);margin-bottom:.4rem}
+.ec-desc{font-size:.82rem;color:var(--gray);line-height:1.5}
+.register-layout{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start}
+.reg-card{background:var(--panel);border:1px solid var(--border2);border-radius:8px;overflow:hidden}
+.reg-card-head{background:var(--lime);padding:1.25rem 1.5rem;display:flex;align-items:center;gap:.75rem}
+.reg-card-head h3{font-family:var(--FH);font-size:1rem;font-weight:700;color:var(--black);letter-spacing:.06em}
+.reg-form{padding:1.5rem}
+.form-row{margin-bottom:1.1rem}
+.form-row label{display:block;font-family:var(--FH);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--lime);margin-bottom:.4rem}
+.form-row input,.form-row select{width:100%;background:#0a0a0a;border:1px solid var(--border2);border-radius:4px;padding:.7rem .9rem;color:var(--white);font-family:var(--FB);font-size:.93rem;outline:none;transition:border-color .2s,box-shadow .2s;appearance:none;-webkit-appearance:none}
+.form-row input::placeholder{color:var(--gray-dim)}
+.form-row input:focus,.form-row select:focus{border-color:var(--lime-dim);box-shadow:0 0 0 3px rgba(154,205,50,.1)}
+.form-row select option{background:var(--dark);color:var(--white)}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-note{font-size:.8rem;color:var(--gray);margin-top:.35rem;line-height:1.4}
+.form-submit{width:100%;background:var(--lime);color:var(--black);font-family:var(--FH);font-size:.78rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;border:none;border-radius:4px;padding:1rem;cursor:pointer;margin-top:.5rem;transition:background .2s,transform .15s,box-shadow .2s;box-shadow:0 4px 20px rgba(154,205,50,.2)}
+.form-submit:hover{background:var(--lime-bright);transform:translateY(-1px);box-shadow:0 6px 28px rgba(154,205,50,.3)}
+.form-disclaimer{font-size:.75rem;color:var(--gray-dim);text-align:center;margin-top:.75rem;line-height:1.5}
+.room-card{background:var(--panel);border:1px solid var(--border2);border-radius:8px;overflow:hidden}
+.room-card-head{background:var(--gold);padding:1.25rem 1.5rem;display:flex;align-items:center;gap:.75rem}
+.room-card-head h3{font-family:var(--FH);font-size:1rem;font-weight:700;color:var(--black);letter-spacing:.06em}
+.room-body{padding:1.5rem}
+.room-body p{font-size:.92rem;color:var(--off-white);line-height:1.7;margin-bottom:1rem}
+.room-body strong{color:var(--white)}
+.room-details{background:#0a0a0a;border:1px solid var(--border);border-radius:4px;padding:1rem 1.1rem;margin-bottom:1.25rem}
+.rd-row{display:flex;justify-content:space-between;align-items:baseline;padding:.4rem 0;border-bottom:1px solid var(--border)}
+.rd-row:last-child{border-bottom:none}
+.rd-label{font-family:var(--FH);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gray)}
+.rd-value{font-size:.9rem;font-weight:700;color:var(--white)}
+.rd-value.highlight{color:var(--gold)}
+.room-cta{display:block;width:100%;background:var(--gold);color:var(--black);font-family:var(--FH);font-size:.78rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;text-align:center;border-radius:4px;padding:1rem;transition:background .2s,transform .15s,box-shadow .2s;box-shadow:0 4px 20px rgba(212,168,32,.2)}
+.room-cta:hover{background:var(--gold-bright);transform:translateY(-1px);box-shadow:0 6px 28px rgba(212,168,32,.3)}
+.room-note{font-size:.78rem;color:var(--gray-dim);text-align:center;margin-top:.75rem;line-height:1.5;font-style:italic}
+.deadline-bar{background:linear-gradient(90deg,#1a0d00,#2a1a00,#1a0d00);border:1px solid var(--gold-dim);border-radius:4px;padding:.9rem 1.2rem;margin-bottom:2rem;display:flex;align-items:center;gap:.75rem}
+.deadline-bar .icon{font-size:1.1rem;flex-shrink:0}
+.deadline-bar p{font-size:.87rem;color:var(--off-white);line-height:1.5}
+.deadline-bar strong{color:var(--gold)}
+.faq-list{display:flex;flex-direction:column;gap:.75rem}
+.faq-item{background:var(--panel);border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.faq-q{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.2rem;cursor:pointer;font-family:var(--FH);font-size:.88rem;font-weight:600;color:var(--white);transition:color .2s;gap:1rem}
+.faq-q:hover{color:var(--lime)}
+.faq-arrow{color:var(--lime-dim);font-size:.75rem;flex-shrink:0;transition:transform .25s}
+.faq-item.open .faq-arrow{transform:rotate(180deg)}
+.faq-a{display:none;padding:0 1.2rem 1rem;font-size:.9rem;color:var(--gray);line-height:1.7;border-top:1px solid var(--border)}
+.faq-a p{padding-top:.75rem}
+.faq-item.open .faq-a{display:block}
+footer{background:var(--panel);border-top:1px solid var(--lime-dim);padding:2.5rem 2rem;text-align:center;position:relative;z-index:1}
+.f-logo{width:54px;height:54px;border-radius:50%;border:1px solid var(--lime-dim);margin:0 auto .9rem;display:block}
+.f-name{font-family:var(--FD);font-size:1rem;color:var(--lime);margin-bottom:.25rem;letter-spacing:.06em}
+.f-tag{font-size:.85rem;color:var(--gray-dim);font-style:italic;margin-bottom:1.5rem}
+.f-links{display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;margin-bottom:1rem}
+.f-links a{font-family:var(--FH);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-dim);text-decoration:none;transition:color .2s}
+.f-links a:hover{color:var(--lime)}
+.f-copy{font-size:.75rem;color:var(--gray-dim)}
+@media(max-width:900px){.sched-wrap{grid-template-columns:1fr}.sessions-grid{grid-template-columns:1fr 1fr}.expect-grid{grid-template-columns:1fr 1fr}.register-layout{grid-template-columns:1fr}.about-layout{grid-template-columns:1fr}}
+@media(max-width:768px){nav{padding:0 1.2rem}.nav-links,.nav-cta{display:none}.nav-toggle{display:flex}.hero-logo{width:140px;height:140px}section{padding:2.75rem 1.25rem}.sessions-grid{grid-template-columns:1fr}.expect-grid{grid-template-columns:1fr 1fr}.purpose-grid{grid-template-columns:1fr}.sched-table thead{display:none}.sched-table tbody tr{display:grid;grid-template-columns:75px 1fr;grid-template-rows:auto auto;padding:.3rem 0}.sched-table td{padding:.28rem .75rem}.td-t{grid-row:1;grid-column:1;font-size:.72rem;padding-top:.4rem;align-self:start}.td-s{grid-row:1;grid-column:2;font-size:.85rem;padding-top:.4rem}.td-f{grid-row:2;grid-column:2;font-size:.68rem;padding-top:0}.form-row-2{grid-template-columns:1fr}}
+@media(max-width:480px){.expect-grid{grid-template-columns:1fr}.hero-badges{flex-direction:column;align-items:center}.hero-cta-row{flex-direction:column;align-items:center}.btn-primary,.btn-secondary{width:100%;text-align:center}}
+</style>
+</head>
+<body>
+<nav>
+  <a class="nav-brand" href="#top">
+    <img class="nav-logo" src="Marriage_on_a_Mission_Logo_HiRes.png" alt="Logo">
+    <div class="nav-text">
+      <span class="nav-name">Marriage on a Mission</span>
+      <span class="nav-tagline">Oct 9–10, 2026</span>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#schedule">Schedule</a></li>
+    <li><a href="#sessions">Sessions</a></li>
+    <li><a href="#expect">What to Expect</a></li>
+    <li><a href="#register">FAQ</a></li>
+  </ul>
+  <a class="nav-cta" href="#register">Register Now</a>
+  <button class="nav-toggle" onclick="toggleMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#about" onclick="closeMenu()">About</a>
+  <a href="#schedule" onclick="closeMenu()">Schedule</a>
+  <a href="#sessions" onclick="closeMenu()">Sessions</a>
+  <a href="#expect" onclick="closeMenu()">What to Expect</a>
+  <a href="#register" onclick="closeMenu()">FAQ</a>
+  <a href="#register" onclick="closeMenu()" class="mm-cta">✦ Register Now</a>
+</div>
+<div id="top">
+<div class="hero">
+  <div class="hero-glow"></div>
+  <img class="hero-logo" src="Marriage_on_a_Mission_Logo_HiRes.png" alt="Marriage on a Mission">
+  <p class="hero-eyebrow">You're Invited</p>
+  <h1 class="hero-title">Marriage<br>on a Mission</h1>
+  <p class="hero-sub">A 2-Day Transformational Conference</p>
+  <div class="hero-divider"></div>
+  <p class="hero-tagline">"Strengthening Unity. Restoring Connection. Building Legacy."</p>
+  <div class="hero-badges">
+    <div class="h-badge accent"><span class="b-label">Dates</span><span class="b-value">October 9–10, 2026</span></div>
+    <div class="h-badge"><span class="b-label">Friday</span><span class="b-value">Dinner &amp; Opening Session</span></div>
+    <div class="h-badge"><span class="b-label">Saturday</span><span class="b-value">Full Day + Closing Celebration</span></div>
+  </div>
+  <div class="hero-cta-row">
+    <a class="btn-primary" href="#register">Reserve Your Spot</a>
+    <a class="btn-secondary" href="#schedule">View Full Schedule</a>
+  </div>
+  <div class="scroll-hint">
+    <span>Learn More</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</div>
+</div>
+<div class="sw" id="about">
+<section>
+  <div class="reveal">
+    <p class="s-label">About the Conference</p>
+    <h2 class="s-title">What Is Marriage on a Mission?</h2>
+    <div class="s-divider"></div>
+  </div>
+  <div class="about-layout">
+    <div class="about-text reveal" style="transition-delay:.1s">
+      <p>Marriage on a Mission is a <strong>2-day transformational experience</strong> designed to restore, strengthen, and activate your marriage. Whether you're in a season of struggle or simply want to go deeper, this conference meets you exactly where you are.</p>
+      <p>We'll spend Friday evening together over dinner and an opening session laying the <strong>biblical foundation</strong> for marriage. Then on Saturday, we go all the way — five powerful sessions, honest conversations, practical tools, and a closing covenant experience you won't forget.</p>
+      <p>This isn't a lecture. This is <strong>an encounter</strong>. Come ready to be honest, to be healed, and to leave with a vision for your marriage that outlasts you.</p>
+      <div class="purpose-grid" style="margin-top:1.5rem">
+        <div class="p-item">Biblical truth that grounds you in God's design</div>
+        <div class="p-item">Honest conversations that create real breakthrough</div>
+        <div class="p-item">Practical tools you can apply immediately at home</div>
+        <div class="p-item">Spirit-led encounters that renew your commitment</div>
       </div>
     </div>
-  );
-
-  // ── REVIEW ──
-  if (isReview) return (
-    <div style={{background:BLACK,fontFamily:"'Lato',sans-serif",color:"#ffffff"}}>
-      <div style={{background:DARK,borderBottom:`1px solid ${LIME}44`,padding:"1rem 1.5rem",textAlign:"center"}}>
-        <div style={{color:GOLD,fontSize:".58rem",letterSpacing:".28em",textTransform:"uppercase",fontFamily:"Georgia,serif",marginBottom:3}}>Review & Submit</div>
-        <div style={{fontFamily:"Georgia,serif",color:LIME,fontSize:"1.15rem",fontWeight:700}}>Marriage on a Mission</div>
-      </div>
-      <div style={{maxWidth:660,margin:"0 auto",padding:"1.25rem 1.25rem 3rem"}}>
-        <p style={{color:"#cccccc",fontSize:".85rem",marginBottom:"1.25rem",lineHeight:1.5}}>Review your answers below. Hit <strong style={{color:LIME}}>Edit</strong> on any question to change it.</p>
-        {questions.map((qq, i) => {
-          const a = answers[qq.id];
-          const display = !a || (Array.isArray(a) && a.length===0)
-            ? <em style={{color:"#888"}}>Skipped</em>
-            : Array.isArray(a) ? a.join(" · ") : a;
-          return (
-            <div key={qq.id} style={{background:"#1a1a1a",border:`1px solid #444`,borderRadius:5,padding:".85rem 1rem",marginBottom:".5rem",display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
-              <div style={{flex:1}}>
-                <div style={{color:sectionColors[qq.section],fontSize:".58rem",letterSpacing:".14em",textTransform:"uppercase",marginBottom:3}}>{qq.section}</div>
-                <p style={{color:"#aaaaaa",fontSize:".8rem",marginBottom:".25rem",lineHeight:1.4}}>{qq.text}</p>
-                <p style={{color:"#ffffff",fontSize:".88rem",lineHeight:1.5}}>{display}</p>
-              </div>
-              <button onClick={() => setCurrent(i)} style={{background:"transparent",border:`1px solid ${LIME}`,borderRadius:3,color:LIME,fontSize:".7rem",padding:"3px 9px",cursor:"pointer",whiteSpace:"nowrap",fontFamily:"Georgia,serif",flexShrink:0}}>Edit</button>
-            </div>
-          );
-        })}
-        <div style={{background:"#1a1a1a",border:`1px solid #555`,borderRadius:6,padding:"1.1rem",marginTop:"1.25rem",marginBottom:".85rem"}}>
-          <label style={{display:"block",color:LIME,fontSize:".62rem",letterSpacing:".16em",textTransform:"uppercase",fontFamily:"Georgia,serif",marginBottom:6}}>Your Email Address</label>
-          <p style={{color:"#cccccc",fontSize:".8rem",marginBottom:".6rem",lineHeight:1.5}}>We'll send you a copy of your responses. Your email is not stored or shared publicly.</p>
-          <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@email.com"
-            style={{width:"100%",background:"#0d0d0d",border:`1px solid #666`,borderRadius:4,padding:".6rem .85rem",color:"#ffffff",fontSize:".9rem",outline:"none",fontFamily:"'Lato',sans-serif",boxSizing:"border-box"}} />
-          {emailError && <p style={{color:"#ff6b6b",fontSize:".8rem",marginTop:5}}>{emailError}</p>}
-        </div>
-        {storageError && <div style={{background:"#2a0a0a",border:"1px solid #cc1f23",borderRadius:4,padding:".65rem .9rem",color:"#ff6b6b",fontSize:".85rem",marginBottom:".85rem"}}>{storageError}</div>}
-        <button onClick={handleSubmit} disabled={submitting}
-          style={{width:"100%",background:submitting?"#333":LIME,color:BLACK,fontFamily:"Georgia,serif",fontSize:".82rem",fontWeight:700,letterSpacing:".12em",textTransform:"uppercase",border:"none",borderRadius:4,padding:".9rem",cursor:submitting?"default":"pointer",marginBottom:".6rem"}}>
-          {submitting ? "Submitting..." : "Submit & Email My Responses →"}
-        </button>
-        <p style={{color:"#888",fontSize:".72rem",textAlign:"center",lineHeight:1.5}}>100% anonymous · October 9–10, 2026 · info.nwfle@gmail.com</p>
+    <div class="reveal" style="transition-delay:.2s">
+      <div class="info-stack">
+        <div class="info-row"><span class="ir-label">Event</span><span class="ir-value">Marriage on a Mission Conference</span></div>
+        <div class="info-row"><span class="ir-label">Dates</span><span class="ir-value">Friday Oct 9 – Saturday Oct 10, 2026</span></div>
+        <div class="info-row"><span class="ir-label">Friday</span><span class="ir-value">6:00 PM — Dinner &amp; Opening Session</span></div>
+        <div class="info-row"><span class="ir-label">Saturday</span><span class="ir-value">8:00 AM — Full Day + Closing Dinner</span></div>
+        <div class="info-row"><span class="ir-label">Format</span><span class="ir-value">Couples only — come as a pair</span></div>
+        <div class="info-row"><span class="ir-label">Includes</span><span class="ir-value">Friday dinner, Saturday meals &amp; materials</span></div>
+        <div class="info-row"><span class="ir-label">Lodging</span><span class="ir-value">On-site rooms available — see below</span></div>
       </div>
     </div>
-  );
-
-  // ── QUESTION ──
-  const canNext = isAnswered(q, answers);
-  const selectedOpts = answers[q.id] || [];
-
-  return (
-    <div style={{background:BLACK,fontFamily:"'Lato',sans-serif",color:"#ffffff"}}>
-      {/* Header */}
-      <div style={{background:DARK,borderBottom:`1px solid ${LIME}44`,padding:".85rem 1.5rem",textAlign:"center"}}>
-        <div style={{color:GOLD,fontSize:".58rem",letterSpacing:".28em",textTransform:"uppercase",fontFamily:"Georgia,serif",marginBottom:2}}>Pre-Conference Research</div>
-        <div style={{fontFamily:"Georgia,serif",color:LIME,fontSize:"1.05rem",fontWeight:700}}>Marriage on a Mission</div>
-      </div>
-
-      {/* Progress */}
-      <div style={{background:PANEL,padding:".6rem 1.25rem .5rem",borderBottom:`1px solid ${BORDER}`}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
-          <span style={{color:"#ffffff",fontSize:".72rem",fontFamily:"Georgia,serif",fontWeight:600}}>Question {current+1} of {questions.length}</span>
-          <span style={{color:LIME,fontSize:".72rem",fontFamily:"Georgia,serif",fontWeight:700}}>{progress}% complete</span>
+  </div>
+</section>
+</div>
+<div class="sw alt" id="schedule">
+<section>
+  <div class="reveal">
+    <p class="s-label">Full Program</p>
+    <h2 class="s-title">Conference Schedule</h2>
+    <div class="s-divider"></div>
+  </div>
+  <div class="sched-wrap">
+    <div class="sched-day reveal" style="transition-delay:.1s">
+      <div class="day-header"><span class="day-pill pill-fri">Day 1</span><span class="day-label">Friday, October 9</span></div>
+      <table class="sched-table">
+        <thead><tr><th>Time</th><th>Session</th><th>Focus</th></tr></thead>
+        <tbody>
+          <tr class="row-meal"><td class="td-t">6:00 PM</td><td class="td-s">Dinner &amp; Welcome</td><td class="td-f">Arrival</td></tr>
+          <tr><td class="td-t">7:30 PM</td><td class="td-s">Opening Session: God's Blueprint for Marriage</td><td class="td-f">Foundation</td></tr>
+          <tr class="row-break"><td class="td-t">9:00 PM</td><td class="td-s">Evening Close &amp; Prayer</td><td class="td-f">Dismissal</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="sched-day reveal" style="transition-delay:.2s">
+      <div class="day-header"><span class="day-pill pill-sat">Day 2</span><span class="day-label">Saturday, October 10</span></div>
+      <table class="sched-table">
+        <thead><tr><th>Time</th><th>Session</th><th>Focus</th></tr></thead>
+        <tbody>
+          <tr class="row-meal"><td class="td-t">8:00 AM</td><td class="td-s">Breakfast &amp; Fellowship</td><td class="td-f">Arrival</td></tr>
+          <tr><td class="td-t">9:00 AM</td><td class="td-s">Session 2: Communication That Connects</td><td class="td-f">Connection</td></tr>
+          <tr class="row-break"><td class="td-t">10:30 AM</td><td class="td-s">Break</td><td class="td-f">—</td></tr>
+          <tr><td class="td-t">10:45 AM</td><td class="td-s">Session 3: Healing What's Been Hidden</td><td class="td-f">Healing</td></tr>
+          <tr class="row-meal"><td class="td-t">12:15 PM</td><td class="td-s">Lunch</td><td class="td-f">—</td></tr>
+          <tr><td class="td-t">1:30 PM</td><td class="td-s">Session 4: Financial Unity</td><td class="td-f">Alignment</td></tr>
+          <tr class="row-break"><td class="td-t">3:00 PM</td><td class="td-s">Break</td><td class="td-f">—</td></tr>
+          <tr><td class="td-t">3:15 PM</td><td class="td-s">Session 5: Intimacy That Connects</td><td class="td-f">Connection</td></tr>
+          <tr><td class="td-t">4:45 PM</td><td class="td-s">Session 6: Marriage on Mission</td><td class="td-f">Purpose</td></tr>
+          <tr class="row-final"><td class="td-t">6:00 PM</td><td class="td-s">Covenant Activation &amp; Closing Prayer</td><td class="td-f">Legacy</td></tr>
+          <tr class="row-special"><td class="td-t">7:00 PM</td><td class="td-s">Special Closing Dinner &amp; Celebration</td><td class="td-f">Celebration</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+</div>
+<div class="sw" id="sessions">
+<section>
+  <div class="reveal">
+    <p class="s-label">What We'll Cover</p>
+    <h2 class="s-title">The Sessions</h2>
+    <div class="s-divider"></div>
+  </div>
+  <div class="sessions-grid reveal" style="transition-delay:.1s">
+    <div class="sess-item"><div class="sess-num">Session 1 · Friday Evening</div><div class="sess-name">God's Blueprint for Marriage</div><div class="sess-obj">Establish God's original design as the foundation for everything that follows.</div></div>
+    <div class="sess-item"><div class="sess-num">Session 2 · Saturday 9 AM</div><div class="sess-name">Communication That Connects</div><div class="sess-obj">Practical tools to move from reaction to real understanding.</div></div>
+    <div class="sess-item"><div class="sess-num red">Session 3 · Saturday 10:45 AM</div><div class="sess-name">Healing What's Been Hidden</div><div class="sess-obj">Bring healing to the real issues beneath surface conflict.</div></div>
+    <div class="sess-item"><div class="sess-num">Session 4 · Saturday 1:30 PM</div><div class="sess-name">Financial Unity</div><div class="sess-obj">Remove money stress and build a shared financial vision.</div></div>
+    <div class="sess-item"><div class="sess-num red">Session 5 · Saturday 3:15 PM</div><div class="sess-name">Intimacy That Connects</div><div class="sess-obj">Reconnect emotionally and physically through vulnerability and service.</div></div>
+    <div class="sess-item"><div class="sess-num">Session 6 · Saturday 4:45 PM</div><div class="sess-name">Marriage on Mission</div><div class="sess-obj">Discover your shared purpose and the legacy your marriage is meant to build.</div></div>
+    <div class="sess-item" style="grid-column:1/-1;background:#0e150a;border-top:1px solid var(--lime-dim)"><div class="sess-num gold">Closing · Saturday 6:00 PM</div><div class="sess-name">Covenant Activation + Celebration Dinner</div><div class="sess-obj">A sacred closing experience where couples face each other, speak life, renew their covenant, and celebrate over a special dinner.</div></div>
+  </div>
+</section>
+</div>
+<div class="sw alt" id="expect">
+<section>
+  <div class="reveal">
+    <p class="s-label">Come Ready</p>
+    <h2 class="s-title">What to Expect</h2>
+    <div class="s-divider"></div>
+  </div>
+  <div class="expect-grid reveal" style="transition-delay:.1s">
+    <div class="expect-card"><span class="ec-icon">📖</span><div class="ec-title">Biblical Truth</div><div class="ec-desc">Every session is rooted in scripture. You'll leave with a deeper understanding of God's design for your marriage.</div></div>
+    <div class="expect-card"><span class="ec-icon">💬</span><div class="ec-title">Honest Conversations</div><div class="ec-desc">Guided exercises help you and your spouse actually talk — and actually hear each other — in a safe environment.</div></div>
+    <div class="expect-card"><span class="ec-icon">🛠</span><div class="ec-title">Practical Tools</div><div class="ec-desc">You'll take home a full action system — daily, weekly, and monthly habits — that keep the momentum going.</div></div>
+    <div class="expect-card"><span class="ec-icon">🕊</span><div class="ec-title">Spirit-Led Encounters</div><div class="ec-desc">This is more than information. Expect moments of prayer, healing, and renewed commitment that go beyond the classroom.</div></div>
+  </div>
+</section>
+</div>
+<div class="sw" id="register">
+<section>
+  <div class="reveal">
+    <p class="s-label">Secure Your Place</p>
+    <h2 class="s-title">Register &amp; Reserve Your Room</h2>
+    <div class="s-divider"></div>
+  </div>
+  <div class="deadline-bar reveal" style="transition-delay:.05s">
+    <span class="icon">⏳</span>
+    <p>Spots are limited. <strong>Registration closes September 26, 2026.</strong> Room blocks are available on a first-come, first-served basis — reserve early to guarantee your rate.</p>
+  </div>
+  <div class="register-layout">
+    <div class="reg-card reveal" style="transition-delay:.1s">
+      <div class="reg-card-head"><span class="icon">✦</span><h3>Conference Registration</h3></div>
+      <form class="reg-form" onsubmit="handleSubmit(event)">
+        <div class="form-row-2 form-row">
+          <div class="form-row"><label for="fname">First Name</label><input type="text" id="fname" placeholder="Your first name" required></div>
+          <div class="form-row"><label for="lname">Last Name</label><input type="text" id="lname" placeholder="Your last name" required></div>
         </div>
-        <div style={{width:"100%",height:6,background:"#2a2a2a",borderRadius:3,overflow:"hidden"}}>
-          <div style={{width:`${progress}%`,height:"100%",background:LIME,borderRadius:3,transition:"width .4s ease"}} />
+        <div class="form-row-2 form-row">
+          <div class="form-row"><label for="sfname">Spouse First Name</label><input type="text" id="sfname" placeholder="Spouse's first name" required></div>
+          <div class="form-row"><label for="slname">Spouse Last Name</label><input type="text" id="slname" placeholder="Spouse's last name" required></div>
         </div>
-      </div>
-
-      {/* Question body */}
-      <div style={{maxWidth:620,margin:"0 auto",padding:"1.5rem 1.25rem 1.25rem",display:"flex",flexDirection:"column"}}>
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:".75rem"}}>
-          <div style={{height:1,width:18,background:accentColor}} />
-          <span style={{color:accentColor,fontSize:".58rem",letterSpacing:".22em",textTransform:"uppercase",fontFamily:"Georgia,serif"}}>{q.section}</span>
+        <div class="form-row"><label for="email">Email Address</label><input type="email" id="email" placeholder="you@email.com" required><p class="form-note">Confirmation and event details will be sent here.</p></div>
+        <div class="form-row"><label for="phone">Phone Number</label><input type="tel" id="phone" placeholder="(000) 000-0000"></div>
+        <div class="form-row"><label for="heard">How Did You Hear About Us?</label>
+          <select id="heard"><option value="" disabled selected>Select one…</option><option>Church / Pastor referral</option><option>Social media</option><option>Friend or family</option><option>Website / Google search</option><option>Email announcement</option><option>Other</option></select>
         </div>
-        <h2 style={{fontFamily:"Georgia,serif",color:"#ffffff",fontSize:"clamp(1rem,2.8vw,1.2rem)",fontWeight:600,lineHeight:1.55,marginBottom:"1rem"}}>
-          {q.text}
-          {q.type!=="text" && <span style={{color:LIME,marginLeft:4}}>*</span>}
-        </h2>
-
-        {/* Single choice */}
-        {q.type==="single" && (
-          <div style={{display:"flex",flexDirection:"column",gap:7}}>
-            {q.options.map(opt => {
-              const sel = answers[q.id]===opt;
-              return (
-                <button key={opt} onClick={() => setAnswer(q.id, opt)}
-                  style={{textAlign:"left",background:sel?`${LIME}2a`:"#1e1e1e",border:`1.5px solid ${sel?LIME:"#555555"}`,borderRadius:4,padding:".7rem .95rem",color:"#ffffff",fontSize:".9rem",cursor:"pointer",transition:"all .15s",display:"flex",alignItems:"center",gap:11}}>
-                  <div style={{width:15,height:15,borderRadius:"50%",border:`1.5px solid ${sel?LIME:"#888888"}`,flexShrink:0,background:sel?LIME:"transparent"}} />
-                  {opt}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Multi choice */}
-        {q.type==="multi" && (
-          <div style={{display:"flex",flexDirection:"column",gap:7}}>
-            {q.options.map(opt => {
-              const sel = (answers[q.id]||[]).includes(opt);
-              return (
-                <button key={opt} onClick={() => toggleMulti(q.id, opt)}
-                  style={{textAlign:"left",background:sel?`${LIME}2a`:"#1e1e1e",border:`1.5px solid ${sel?LIME:"#555555"}`,borderRadius:4,padding:".7rem .95rem",color:"#ffffff",fontSize:".9rem",cursor:"pointer",transition:"all .15s",display:"flex",alignItems:"center",gap:11}}>
-                  <div style={{width:15,height:15,borderRadius:2,border:`1.5px solid ${sel?LIME:"#888888"}`,flexShrink:0,background:sel?LIME:"transparent",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                    {sel && <span style={{color:BLACK,fontSize:10,fontWeight:700,lineHeight:1}}>✓</span>}
-                  </div>
-                  {opt}
-                </button>
-              );
-            })}
-            <p style={{color:"#aaaaaa",fontSize:".75rem",marginTop:2}}>Select all that apply</p>
-          </div>
-        )}
-
-        {/* Multi open (q11) */}
-        {q.type==="multi_open" && (
-          <div style={{display:"flex",flexDirection:"column",gap:7}}>
-            {q.options.map(opt => {
-              const sel = selectedOpts.includes(opt);
-              const fuKey = `${q.id}_fu_${opt}`;
-              const hasFollowUp = q.followUps && q.followUps[opt];
-              return (
-                <div key={opt}>
-                  <button onClick={() => toggleMulti(q.id, opt)}
-                    style={{width:"100%",textAlign:"left",background:sel?`${LIME}2a`:"#1e1e1e",border:`1.5px solid ${sel?LIME:"#555555"}`,borderRadius: sel && hasFollowUp ? "4px 4px 0 0" : 4,padding:".7rem .95rem",color:"#ffffff",fontSize:".9rem",cursor:"pointer",transition:"all .15s",display:"flex",alignItems:"center",gap:11}}>
-                    <div style={{width:15,height:15,borderRadius:2,border:`1.5px solid ${sel?LIME:"#888888"}`,flexShrink:0,background:sel?LIME:"transparent",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                      {sel && <span style={{color:BLACK,fontSize:10,fontWeight:700,lineHeight:1}}>✓</span>}
-                    </div>
-                    {opt}
-                  </button>
-                  {sel && hasFollowUp && (
-                    <div style={{background:"#0d1a00",border:`1.5px solid ${LIME}`,borderTop:`1px solid ${LIME}44`,borderRadius:"0 0 4px 4px",padding:".75rem .95rem"}}>
-                      <p style={{color:LIME,fontSize:".78rem",marginBottom:6,fontStyle:"italic",lineHeight:1.4}}>{q.followUps[opt]}</p>
-                      <textarea value={answers[fuKey]||""} onChange={e=>setAnswer(fuKey, e.target.value)}
-                        placeholder="Share as much or as little as you'd like..."
-                        rows={2}
-                        style={{width:"100%",background:"#111",border:`1px solid #555`,borderRadius:3,padding:".55rem .75rem",color:"#ffffff",fontSize:".85rem",resize:"vertical",fontFamily:"'Lato',sans-serif",outline:"none",boxSizing:"border-box"}} />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-            <p style={{color:"#aaaaaa",fontSize:".75rem",marginTop:2}}>Select all that apply</p>
-          </div>
-        )}
-
-        {/* Scale */}
-        {q.type==="scale" && (
-          <div>
-            <div style={{display:"flex",gap:8,justifyContent:"center",margin:".75rem 0 .5rem"}}>
-              {[1,2,3,4,5].map(n => {
-                const sel = answers[q.id]===n;
-                return (
-                  <button key={n} onClick={() => setAnswer(q.id, n)}
-                    style={{width:50,height:50,borderRadius:"50%",border:`1.5px solid ${sel?LIME:"#666"}`,background:sel?LIME:"#1e1e1e",color:sel?BLACK:"#ffffff",fontSize:".95rem",fontWeight:700,cursor:"pointer",transition:"all .15s"}}>
-                    {n}
-                  </button>
-                );
-              })}
-            </div>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:".25rem"}}>
-              {q.labels.map((l,i) => <span key={i} style={{color:"#cccccc",fontSize:".68rem",maxWidth:90,textAlign:i===1?"center":i===2?"right":"left"}}>{l}</span>)}
-            </div>
-          </div>
-        )}
-
-        {/* Text */}
-        {q.type==="text" && (
-          <textarea value={answers[q.id]||""} onChange={e=>setAnswer(q.id,e.target.value)} placeholder={q.placeholder} rows={4}
-            style={{width:"100%",background:"#1e1e1e",border:`1.5px solid #555`,borderRadius:4,padding:".7rem .9rem",color:"#ffffff",fontSize:".9rem",resize:"vertical",fontFamily:"'Lato',sans-serif",outline:"none",boxSizing:"border-box"}} />
-        )}
-
-        {/* Nav — always visible */}
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:"1.5rem",gap:10,paddingTop:"1rem",borderTop:`1px solid #2a2a2a`}}>
-          <button onClick={goBack} disabled={current===0}
-            style={{background:"transparent",border:`2px solid ${current===0?"#333":LIME}`,borderRadius:4,color:current===0?"#444":LIME,padding:".6rem 1.1rem",fontSize:".8rem",fontWeight:700,cursor:current===0?"default":"pointer",fontFamily:"Georgia,serif",letterSpacing:".06em",transition:"all .2s"}}>
-            ← Back
-          </button>
-          <button onClick={advance} disabled={!canNext && q.type!=="text"}
-            style={{background:canNext||q.type==="text"?LIME:"#1a1a1a",color:canNext||q.type==="text"?BLACK:"#444444",border:`2px solid ${canNext||q.type==="text"?LIME:"#333"}`,borderRadius:4,padding:".6rem 1.4rem",fontSize:".8rem",fontWeight:700,cursor:canNext||q.type==="text"?"pointer":"default",fontFamily:"Georgia,serif",letterSpacing:".1em",textTransform:"uppercase",transition:"all .2s"}}>
-            {current===questions.length-1 ? "Review →" : "Next →"}
-          </button>
+        <div class="form-row"><label for="lodging">Will You Need Lodging?</label>
+          <select id="lodging"><option value="" disabled selected>Select one…</option><option>Yes — I'll reserve a room below</option><option>No — I'll arrange my own lodging</option><option>Not sure yet</option></select>
+        </div>
+        <button type="submit" class="form-submit">Complete Registration &amp; Pay →</button>
+        <p class="form-disclaimer">By registering you agree to our cancellation policy. Refunds available up to 14 days before the event.</p>
+      </form>
+    </div>
+    <div class="room-card reveal" style="transition-delay:.2s">
+      <div class="room-card-head"><span class="icon">🏨</span><h3>Reserve Your Room</h3></div>
+      <div class="room-body">
+        <p>Stay on-site and make the most of the weekend. We've secured a <strong>room block at a special conference rate</strong> — available exclusively to registered attendees while rooms last.</p>
+        <p>Checking in Friday afternoon gives you time to settle in before the 6 PM welcome dinner. Check-out is Sunday morning.</p>
+        <div class="room-details">
+          <div class="rd-row"><span class="rd-label">Check-In</span><span class="rd-value">Friday, October 9 · 3:00 PM</span></div>
+          <div class="rd-row"><span class="rd-label">Check-Out</span><span class="rd-value">Sunday, October 11 · 11:00 AM</span></div>
+          <div class="rd-row"><span class="rd-label">Rate</span><span class="rd-value highlight">Conference Group Rate</span></div>
+          <div class="rd-row"><span class="rd-label">Block Code</span><span class="rd-value highlight">MISSION2026</span></div>
+          <div class="rd-row"><span class="rd-label">Deadline</span><span class="rd-value">September 19, 2026</span></div>
+        </div>
+        <a class="room-cta" href="#" onclick="alert('Replace this link with your hotel booking URL')">Reserve Your Room →</a>
+        <p class="room-note">Rooms are limited and released after the block deadline. We recommend booking as soon as you register.</p>
+        <div style="margin-top:1.5rem;padding:1rem;background:#0a0a0a;border:1px solid var(--border);border-radius:4px">
+          <p style="font-family:var(--FH);font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem">Questions?</p>
+          <p style="font-size:.87rem;color:var(--gray);line-height:1.6">Contact us at <a href="mailto:info.nwfle@gmail.com" style="color:var(--lime);text-decoration:none">info.nwfle@gmail.com</a> and we'll be happy to help.</p>
         </div>
       </div>
     </div>
-  );
-}
+  </div>
+</section>
+</div>
+<div class="sw alt" id="faq">
+<section>
+  <div class="reveal">
+    <p class="s-label">Common Questions</p>
+    <h2 class="s-title">FAQ</h2>
+    <div class="s-divider"></div>
+  </div>
+  <div class="faq-list reveal" style="transition-delay:.1s">
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Do both spouses need to register separately? <span class="faq-arrow">▼</span></div><div class="faq-a"><p>No — registration is per couple. One registration covers both spouses.</p></div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">What is included in the registration fee? <span class="faq-arrow">▼</span></div><div class="faq-a"><p>Your registration includes Friday welcome dinner, Saturday breakfast and lunch, all session materials and participant workbooks, and the Saturday closing celebration dinner. Lodging is separate.</p></div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Can we attend if we're engaged but not yet married? <span class="faq-arrow">▼</span></div><div class="faq-a"><p>Absolutely. This conference is designed for married couples but is equally powerful for engaged couples preparing for marriage.</p></div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">What if our marriage is in a really difficult place right now? <span class="faq-arrow">▼</span></div><div class="faq-a"><p>Then you're exactly who this conference was built for. Many couples come in crisis and leave with hope, tools, and a renewed commitment.</p></div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">What is the cancellation and refund policy? <span class="faq-arrow">▼</span></div><div class="faq-a"><p>Full refunds are available up to 14 days before the event. After that date, registrations are non-refundable but may be transferred to another couple.</p></div></div>
+    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Do we have to stay on-site? <span class="faq-arrow">▼</span></div><div class="faq-a"><p>On-site lodging is optional but highly recommended. Staying on-site allows you to fully immerse in the experience without the distraction of commuting.</p></div></div>
+  </div>
+</section>
+</div>
+<footer>
+  <img class="f-logo" src="Marriage_on_a_Mission_Logo_HiRes.png" alt="Logo">
+  <div class="f-name">Marriage on a Mission</div>
+  <div class="f-tag">"Strengthening Unity. Restoring Connection. Building Legacy."</div>
+  <div class="f-links">
+    <a href="#about">About</a><a href="#schedule">Schedule</a><a href="#sessions">Sessions</a><a href="#register">Register</a><a href="mailto:info.nwfle@gmail.com">Contact</a>
+  </div>
+  <div class="f-copy">© 2026 Marriage on a Mission Ministry. All rights reserved.</div>
+</footer>
+<script>
+function toggleMenu(){document.getElementById('mobileMenu').classList.toggle('open')}
+function closeMenu(){document.getElementById('mobileMenu').classList.remove('open')}
+function toggleFaq(el){el.parentElement.classList.toggle('open')}
+function handleSubmit(e){e.preventDefault();alert('Registration received! Replace this handler with your payment link.')}
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})},{threshold:.07});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>
