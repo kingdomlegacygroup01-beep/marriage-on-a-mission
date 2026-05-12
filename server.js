@@ -93,9 +93,9 @@ app.post('/api/register', async (req, res) => {
         </div>
         ${lodging&&lodging.includes('Yes')?`<div style="margin:24px 0;padding:20px;background:#1a1300;border:1px solid #8a6a0a;border-radius:6px">
           <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#d4a820;margin-bottom:10px">Reserve Your Room</p>
-          <p style="color:#e4e4e4;font-size:14px;line-height:1.6;margin-bottom:14px">Room block deadline is <strong style="color:#f0c830">September 19</strong>.</p>
+          <p style="color:#e4e4e4;font-size:14px;line-height:1.6;margin-bottom:14px">Room block deadline is <strong style="color:#f0c830">September 1</strong>.</p>
           <a href="${RESERVATION_URL}" style="display:inline-block;background:#d4a820;color:#000;font-weight:bold;font-size:13px;text-decoration:none;padding:12px 24px;border-radius:4px">Reserve Your Room</a>
-          <p style="color:#cccccc;font-size:12px;margin-top:10px">Block Code: MISSION2025</p>
+          <p style="color:#cccccc;font-size:12px;margin-top:10px">Block Code: 091126NWFL</p>
         </div>`:''}
         <p style="color:#cccccc;font-size:13px;margin-top:16px">Questions? <a href="mailto:info.nwfle@gmail.com" style="color:#9acd32">info.nwfle@gmail.com</a></p>
         <p style="text-align:center;color:#aaaaaa;font-size:12px;margin-top:24px;font-style:italic">"Strengthening Unity. Restoring Connection. Building Legacy."</p>
