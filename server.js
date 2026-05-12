@@ -13,42 +13,38 @@ app.use(express.static(path.join(__dirname, 'public')));
 const NOTIFY_EMAIL    = 'info.nwfle@gmail.com';
 const RESERVATION_URL = 'https://be.synxis.com/?adult=1&arrive=2026-10-09&chain=6255&child=0&currency=USD&depart=2026-10-11&group=091126NWFL&hotel=37398&level=hotel&locale=en-US&productcurrency=USD&rooms=1';
 
-// Send via Gmail API directly — no nodemailer needed
 function sendEmail({ to, subject, html }) {
   return new Promise((resolve, reject) => {
-    const user = process.env.GMAIL_USER;
-    const pass = process.env.GMAIL_APP_PASSWORD;
-    if (!user || !pass) return reject(new Error('Gmail credentials not set'));
+    const apiKey = process.env.SENDGRID_API_KEY;
+    if (!apiKey) return reject(new Error('SENDGRID_API_KEY not set'));
 
-    // Strip all spaces/whitespace from app password just in case
-    const cleanPass = pass.replace(/\s+/g, '');
-
-    const body = JSON.stringify({ to, subject, html, user, pass: cleanPass });
-
-    // Use nodemailer via inline require with explicit SMTP settings
-    const nodemailer = require('nodemailer');
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: user.trim(),
-        pass: cleanPass,
-      },
-      tls: {
-        rejectUnauthorized: false
-      }
-    });
-
-    transporter.sendMail({
-      from: `"Marriage on a Mission" <${user.trim()}>`,
-      to: Array.isArray(to) ? to.join(',') : to,
+    const body = JSON.stringify({
+      personalizations: [{ to: [{ email: Array.isArray(to) ? to[0] : to }] }],
+      from: { email: NOTIFY_EMAIL, name: 'Marriage on a Mission' },
       subject,
-      html,
-    }, (err, info) => {
-      if (err) return reject(err);
-      resolve(info);
+      content: [{ type: 'text/html', value: html }],
     });
+
+    const req = https.request({
+      hostname: 'api.sendgrid.com',
+      path:     '/v3/mail/send',
+      method:   'POST',
+      headers: {
+        'Authorization':  `Bearer ${apiKey}`,
+        'Content-Type':   'application/json',
+        'Content-Length': Buffer.byteLength(body),
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) resolve({ status: res.statusCode });
+        else reject(new Error(`SendGrid ${res.statusCode}: ${data}`));
+      });
+    });
+    req.on('error', reject);
+    req.write(body);
+    req.end();
   });
 }
 
@@ -58,6 +54,7 @@ app.post('/api/register', async (req, res) => {
     return res.status(400).json({ success: false, error: 'Missing required fields.' });
 
   try {
+    // 1) Notify ministry team
     await sendEmail({
       to: NOTIFY_EMAIL,
       subject: `New Registration — ${fname} ${lname} & ${sfname||''} ${slname||''}`.trim(),
@@ -77,6 +74,7 @@ app.post('/api/register', async (req, res) => {
       </div>`,
     });
 
+    // 2) Confirmation to registrant
     await sendEmail({
       to: email,
       subject: `You're Registered — Marriage on a Mission, October 9-10, 2025`,
@@ -99,7 +97,7 @@ app.post('/api/register', async (req, res) => {
           <a href="${RESERVATION_URL}" style="display:inline-block;background:#d4a820;color:#000;font-weight:bold;font-size:13px;text-decoration:none;padding:12px 24px;border-radius:4px">Reserve Your Room</a>
           <p style="color:#cccccc;font-size:12px;margin-top:10px">Block Code: MISSION2025</p>
         </div>`:''}
-        <p style="color:#cccccc;font-size:13px">Questions? <a href="mailto:info.nwfle@gmail.com" style="color:#9acd32">info.nwfle@gmail.com</a></p>
+        <p style="color:#cccccc;font-size:13px;margin-top:16px">Questions? <a href="mailto:info.nwfle@gmail.com" style="color:#9acd32">info.nwfle@gmail.com</a></p>
         <p style="text-align:center;color:#aaaaaa;font-size:12px;margin-top:24px;font-style:italic">"Strengthening Unity. Restoring Connection. Building Legacy."</p>
       </div>`,
     });
@@ -119,9 +117,9 @@ app.post('/api/room-notify', async (req, res) => {
       subject: `Room Reservation Started — ${fname||''} ${lname||''}`.trim(),
       html: `<div style="font-family:Arial,sans-serif;max-width:600px;background:#0e0e0e;color:#e4e4e4;padding:32px;border-radius:8px">
         <h2 style="color:#d4a820;margin-bottom:16px">Room Reservation Initiated</h2>
-        <p style="color:#e4e4e4">A participant clicked the room reservation link.</p>
-        <p style="color:#fff;margin-top:12px"><strong>Name:</strong> ${fname||'—'} ${lname||''} &amp; ${sfname||'—'} ${slname||''}</p>
-        <p style="color:#fff"><strong>Email:</strong> ${email||'—'}</p>
+        <p style="color:#e4e4e4;margin-bottom:12px">A participant clicked the room reservation link.</p>
+        <p style="color:#fff"><strong>Name:</strong> ${fname||'—'} ${lname||''} &amp; ${sfname||'—'} ${slname||''}</p>
+        <p style="color:#fff;margin-top:8px"><strong>Email:</strong> ${email||'—'}</p>
       </div>`,
     });
   } catch (err) {
