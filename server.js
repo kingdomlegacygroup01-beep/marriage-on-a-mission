@@ -62,7 +62,7 @@ app.post('/api/register', async (req, res) => {
         <div style="text-align:center;margin-bottom:24px">
           <p style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#9acd32;margin-bottom:8px">New Registration</p>
           <h1 style="color:#9acd32;font-size:22px;margin:0">Marriage on a Mission</h1>
-          <p style="color:#cccccc;font-size:13px;margin-top:6px">October 9-10, 2025</p>
+          <p style="color:#cccccc;font-size:13px;margin-top:6px">October 9-10, 2026</p>
         </div>
         <table style="width:100%;border-collapse:collapse">
           <tr style="border-bottom:1px solid #252525"><td style="padding:10px 12px;font-size:11px;text-transform:uppercase;color:#9acd32;width:130px">Couple</td><td style="padding:10px 12px;color:#fff;font-weight:bold">${fname} ${lname} &amp; ${sfname||'—'} ${slname||''}</td></tr>
@@ -77,7 +77,7 @@ app.post('/api/register', async (req, res) => {
     // 2) Confirmation to registrant
     await sendEmail({
       to: email,
-      subject: `You're Registered — Marriage on a Mission, October 9-10, 2025`,
+      subject: `You're Registered — Marriage on a Mission, October 9-10, 2026`,
       html: `<div style="font-family:Arial,sans-serif;max-width:600px;background:#0e0e0e;color:#e4e4e4;padding:32px;border-radius:8px;border:1px solid #2a2a2a">
         <div style="text-align:center;margin-bottom:28px">
           <p style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#9acd32;margin-bottom:8px">You're Registered!</p>
@@ -85,7 +85,7 @@ app.post('/api/register', async (req, res) => {
           <p style="color:#d4a820;font-style:italic;font-size:14px;margin-top:8px">A 2-Day Transformational Conference</p>
         </div>
         <p style="color:#e4e4e4;font-size:15px;line-height:1.7">Hi ${fname} &amp; ${sfname||'your spouse'},</p>
-        <p style="color:#e4e4e4;font-size:15px;line-height:1.7;margin-top:12px">Your registration for <strong style="color:#fff">Marriage on a Mission — October 9-10, 2025</strong> has been received. We can't wait to spend this weekend with you!</p>
+        <p style="color:#e4e4e4;font-size:15px;line-height:1.7;margin-top:12px">Your registration for <strong style="color:#fff">Marriage on a Mission — October 9-10, 2026</strong> has been received. We can't wait to spend this weekend with you!</p>
         <div style="margin:24px 0;padding:20px;background:#131313;border:1px solid #4d6e15;border-radius:6px">
           <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#9acd32;margin-bottom:12px">Conference Details</p>
           <p style="color:#fff;margin:6px 0"><strong>Friday, October 9</strong> — 6:00 PM Dinner &amp; Opening Session</p>
