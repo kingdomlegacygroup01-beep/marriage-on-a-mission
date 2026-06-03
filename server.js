@@ -52,6 +52,8 @@ function sendEmail({ to, subject, html }) {
 }
 
 app.post('/api/register', async (req, res) => {
+  // REGISTRATION CLOSED — reject all attempts immediately
+  return res.status(403).json({ success: false, error: "Registration is closed. The conference is at full capacity." });
   const { fname, lname, sfname, slname, email, phone, heard, lodging } = req.body;
   if (!fname || !lname || !email)
     return res.status(400).json({ success: false, error: 'Missing required fields.' });
