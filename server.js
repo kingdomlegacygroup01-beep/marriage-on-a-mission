@@ -3,6 +3,9 @@ const express = require('express');
 const path    = require('path');
 const https   = require('https');
 
+// ── Branded email templates ──────────────────────────────────────────────────
+const { confirmationEmail } = require('./emails');
+
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
@@ -74,32 +77,11 @@ app.post('/api/register', async (req, res) => {
       </div>`,
     });
 
-    // 2) Confirmation to registrant
+    // 2) Branded confirmation to registrant
     await sendEmail({
       to: email,
       subject: `You're Registered — Marriage on a Mission, October 9-10, 2026`,
-      html: `<div style="font-family:Arial,sans-serif;max-width:600px;background:#0e0e0e;color:#e4e4e4;padding:32px;border-radius:8px;border:1px solid #2a2a2a">
-        <div style="text-align:center;margin-bottom:28px">
-          <p style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#9acd32;margin-bottom:8px">You're Registered!</p>
-          <h1 style="color:#9acd32;font-size:24px;margin:0">Marriage on a Mission</h1>
-          <p style="color:#d4a820;font-style:italic;font-size:14px;margin-top:8px">A 2-Day Transformational Conference</p>
-        </div>
-        <p style="color:#e4e4e4;font-size:15px;line-height:1.7">Hi ${fname} &amp; ${sfname||'your spouse'},</p>
-        <p style="color:#e4e4e4;font-size:15px;line-height:1.7;margin-top:12px">Your registration for <strong style="color:#fff">Marriage on a Mission — October 9-10, 2026</strong> has been received. We can't wait to spend this weekend with you!</p>
-        <div style="margin:24px 0;padding:20px;background:#131313;border:1px solid #4d6e15;border-radius:6px">
-          <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#9acd32;margin-bottom:12px">Conference Details</p>
-          <p style="color:#fff;margin:6px 0"><strong>Friday, October 9</strong> — 6:00 PM Dinner &amp; Opening Session</p>
-          <p style="color:#fff;margin:6px 0"><strong>Saturday, October 10</strong> — 8:00 AM Full Day + Closing Dinner</p>
-        </div>
-        ${lodging&&lodging.includes('Yes')?`<div style="margin:24px 0;padding:20px;background:#1a1300;border:1px solid #8a6a0a;border-radius:6px">
-          <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#d4a820;margin-bottom:10px">Reserve Your Room</p>
-          <p style="color:#e4e4e4;font-size:14px;line-height:1.6;margin-bottom:14px">Room block deadline is <strong style="color:#f0c830">September 1</strong>.</p>
-          <a href="${RESERVATION_URL}" style="display:inline-block;background:#d4a820;color:#000;font-weight:bold;font-size:13px;text-decoration:none;padding:12px 24px;border-radius:4px">Reserve Your Room</a>
-          <p style="color:#cccccc;font-size:12px;margin-top:10px">Block Code: 091126NWFL</p>
-        </div>`:''}
-        <p style="color:#cccccc;font-size:13px;margin-top:16px">Questions? <a href="mailto:info.nwfle@gmail.com" style="color:#9acd32">info.nwfle@gmail.com</a></p>
-        <p style="text-align:center;color:#aaaaaa;font-size:12px;margin-top:24px;font-style:italic">"Strengthening Unity. Restoring Connection. Building Legacy."</p>
-      </div>`,
+      html: confirmationEmail({ fname, sfname, lname, slname, lodging, reservationUrl: RESERVATION_URL }),
     });
 
     res.json({ success: true });
